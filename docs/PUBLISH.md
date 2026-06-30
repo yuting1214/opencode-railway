@@ -9,7 +9,7 @@ Verify with `railway --version`; upgrade with `brew upgrade railway` if needed.
    must be reachable. Replace the `REPLACE_ME` placeholders in `README.md` and `TEMPLATE.md` with
    the real repo URL.
 2. **A project with a service linked to that GitHub repo**, with **root directory set to
-   `opencode-devbox`** (this is the monorepo subdir that holds the Dockerfile). A service deployed
+   `opencode`** (this is the monorepo subdir that holds the Dockerfile). A service deployed
    only via local `railway up` has no git source to template.
 3. **A volume** on that service mounted at `/workspace`.
 4. Deploy once and verify cold-start works (see checklist below).
