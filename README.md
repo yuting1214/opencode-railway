@@ -1,6 +1,6 @@
 # OpenCode on Railway
 
-[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/opencode-devbox?referralCode=jk_FgY&utm_medium=integration&utm_source=template&utm_campaign=generic)
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/opencode-cli-web-app?referralCode=jk_FgY&utm_medium=integration&utm_source=template&utm_campaign=generic)
 
 A one-click, self-hosted home for **[OpenCode](https://opencode.ai)** — the open-source AI coding
 agent — with **two ways in from one service**:
