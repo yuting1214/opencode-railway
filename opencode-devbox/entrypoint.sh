@@ -22,7 +22,16 @@ chmod 700 /workspace/.ssh
 # OpenCode stores auth (auth.json) + state under ~/.local/share/opencode
 # and config under ~/.config/opencode. Point both at the volume so an
 # `opencode auth login` survives redeploys.
+#
+# NOTE: the opencode-ai npm postinstall creates these as REAL dirs at build
+# time, so they exist in the image on every boot. A naive `ln` would drop the
+# link *inside* that real dir, leaving auth.json on the ephemeral container
+# layer. So: unless the path is already our symlink, remove the build-time dir
+# first. (These paths live in the image layer, never on the volume.)
 mkdir -p /root/.local/share /root/.config
+for link in /root/.local/share/opencode /root/.config/opencode; do
+    [ -L "$link" ] || rm -rf "$link"
+done
 ln -sfn /workspace/opencode/data   /root/.local/share/opencode
 ln -sfn /workspace/opencode/config /root/.config/opencode
 ln -sfn /workspace/.ssh            /root/.ssh
