@@ -86,6 +86,10 @@ df -h /workspace        # check volume usage
 - `railway ssh` runs a login shell, which sources `/etc/profile.d/00-opencode-env.sh`; that's how
   your provider keys reach `opencode`. If a key seems missing, re-check the Variables tab and
   reconnect.
-- This template intentionally has **no public HTTP endpoint**. If you ever want the OpenCode HTTP
-  server (`opencode serve`), expose `$PORT` and protect it with `OPENCODE_SERVER_PASSWORD` — but
-  that's a different use case from this SSH devbox.
+- **Web UI:** the container's main process is `opencode web` on the public Railway domain, behind
+  HTTP basic auth (user `opencode`, password from `OPENCODE_SERVER_PASSWORD` — auto-generated on
+  first boot and printed in the deploy logs / stored at `/workspace/.opencode-web-password`). The
+  TUI over SSH and the web UI run in the **same** container and share `/workspace`, auth, and repos.
+- **Rotating the web password:** set `OPENCODE_SERVER_PASSWORD` in Variables (redeploys), or edit
+  `/workspace/.opencode-web-password` and restart. To make the box private again, remove the
+  service's public domain in Railway → only `railway ssh` remains.
