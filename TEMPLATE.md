@@ -1,7 +1,7 @@
 # Deploy and Host OpenCode on Railway
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/yuting1214/opencode-railway/__HERO_SHA__/assets/hero.png" alt="OpenCode — open-source AI coding agent" width="720">
+  <img src="https://raw.githubusercontent.com/yuting1214/opencode-railway/f96aaa0af904d4c13a8207598bd4c82420640984/assets/hero.png" alt="OpenCode — open-source AI coding agent" width="720">
 </p>
 
 [OpenCode](https://opencode.ai) is **the open-source AI coding agent** (think Claude Code, but open
