@@ -24,6 +24,17 @@ WORKDIR /workspace
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
+# `opencode web` tries to launch a browser via xdg-open on start; on a headless
+# container that throws a noisy (harmless) error. Shim it to a no-op.
+RUN printf '#!/bin/sh\nexit 0\n' > /usr/local/bin/xdg-open \
+    && chmod +x /usr/local/bin/xdg-open
+
+# The web UI listens here; Railway maps the public domain to $PORT.
+ENV PORT=8080
+EXPOSE 8080
+
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
-# Keep the container alive so you can `railway ssh` in and run `opencode`.
-CMD ["sleep", "infinity"]
+# Main process = the OpenCode web UI on the public Railway domain (basic-auth
+# protected). The container stays alive via this server, and you can still
+# `railway ssh` in and run `opencode` for the TUI in the same box.
+CMD ["bash", "-lc", "exec opencode web --hostname 0.0.0.0 --port ${PORT:-8080}"]
