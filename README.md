@@ -1,8 +1,8 @@
-# OpenCode Devbox on Railway
+# OpenCode on Railway
 
-[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/opencode-devbox)
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/opencode-devbox?referralCode=jk_FgY&utm_medium=integration&utm_source=template&utm_campaign=generic)
 
-A one-click, **persistent dev box for [OpenCode](https://opencode.ai)** — the open-source AI coding
+A one-click, self-hosted home for **[OpenCode](https://opencode.ai)** — the open-source AI coding
 agent — with **two ways in from one service**:
 
 - 🌐 **Web UI** — `opencode web` on a **public Railway domain** (HTTP basic auth), open it in a browser.
@@ -59,7 +59,7 @@ See [`docs/USAGE.md`](docs/USAGE.md) for the full walkthrough,
 
 ```
 opencode-railway/
-├── opencode-devbox/        ← the deployable (Railway root directory)
+├── opencode/               ← the deployable (Railway root directory)
 │   ├── Dockerfile
 │   ├── entrypoint.sh
 │   ├── railway.json
