@@ -1,6 +1,6 @@
 # OpenCode Devbox on Railway
 
-[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/REPLACE_ME)
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/opencode-devbox)
 
 A one-click, **persistent remote dev box for [OpenCode](https://opencode.ai)** — the open-source AI
 coding agent. Deploy it, `railway ssh` in, type `opencode`, and use it just like Claude Code or any
