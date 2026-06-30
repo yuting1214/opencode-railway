@@ -1,0 +1,8 @@
+# Secrets — never commit real keys
+.env
+opencode-devbox/.env
+*.local
+
+# Logs / OS cruft
+*.log
+.DS_Store
