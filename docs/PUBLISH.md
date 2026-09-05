@@ -68,9 +68,44 @@ The command returns the published `{ code }`; the deploy URL is then
 - **Renaming or changing captured variables**: regenerate from the updated project → publish new →
   delete old (reclaims the same slug, keeping the URL stable).
 
+## Keeping the OpenCode pin current
+
+The agent is pinned via `ARG OPENCODE_VERSION` in `opencode/Dockerfile`. That pin is what
+keeps deploy-success stable — unpinned, every deploy rebuilt against whatever npm published
+that hour (~300 publishes/30 days, ~20 stable releases/month), so one bad upstream release
+crash-looped `opencode web` for everyone deploying that day.
+
+**But a pin nobody bumps is its own failure mode.** Check every week or two:
+
+```bash
+npm view opencode-ai version                       # current stable
+gh api repos/anomalyco/opencode/releases --jq '.[0:5][] | .tag_name + "  " + .published_at'
+```
+
+To bump:
+
+1. Edit `ARG OPENCODE_VERSION` in `opencode/Dockerfile`.
+2. `docker build` locally — the layer runs `opencode --version`, so a yanked or broken
+   version fails the **build** instead of shipping an image that crash-loops at runtime.
+3. Deploy to a scratch project and run the cold-start checklist above.
+4. Confirm `/site.webmanifest` still returns **200 unauthenticated** — it is the
+   healthcheck path, and it is the only unauthenticated endpoint on the service. If an
+   upstream release ever changes or protects it, **every deploy will fail**, so re-check
+   this on every bump.
+5. Commit. No republish needed — this is a build change.
+
 ## Monitoring adoption
 
-There is **no CLI/API** for template metrics. Scrape the public page:
+Prefer the CLI/GraphQL over scraping (the public page renders stats client-side):
+
+```bash
+# yours — deploys / active / health / payout
+python3 ~/.claude/skills/railway-templates/scripts/template-metrics.py --detail
+# rivals — deploymentCount + healthScore
+railway templates search "opencode" --json --limit 20
+```
+
+Legacy fallback — scrape the public page:
 
 ```
 WebFetch https://railway.com/deploy/<code>
