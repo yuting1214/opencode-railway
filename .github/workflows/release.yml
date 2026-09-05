@@ -1,0 +1,87 @@
+name: release
+
+# Publishes the container image the Railway template deploys from (M2).
+#
+# Tag scheme: the git tag is the TEMPLATE version, not the OpenCode version.
+#   git tag v1.0.0  ->  ghcr.io/<owner>/opencode-railway:1.0.0
+#                       ghcr.io/<owner>/opencode-railway:1.0
+#
+# The template references the MINOR tag (:1.0) with Railway `autoUpdates: patch`,
+# so publishing 1.0.1 rolls existing deployments forward automatically while a
+# breaking change (1.1.x) never lands on anyone unannounced. This mirrors what
+# the two highest-health competitors do — neither ships a frozen image.
+#
+# The OpenCode version that went into the image is recorded as a label so any
+# published image can be traced back to the agent it runs.
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Template version to publish, e.g. 1.0.0'
+        required: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve tags
+        id: meta
+        run: |
+          raw="${{ github.event.inputs.version }}"
+          [ -n "$raw" ] || raw="${GITHUB_REF_NAME#v}"
+          case "$raw" in
+            [0-9]*.[0-9]*.[0-9]*) ;;
+            *) echo "::error::version must be MAJOR.MINOR.PATCH, got '$raw'"; exit 1 ;;
+          esac
+          echo "version=$raw"            >> "$GITHUB_OUTPUT"
+          echo "minor=${raw%.*}"         >> "$GITHUB_OUTPUT"
+          echo "opencode=$(grep -oP '^ARG OPENCODE_VERSION=\K.*' opencode/Dockerfile)" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Railway builds and runs amd64. Building only that keeps releases fast;
+      # add linux/arm64 here if the image is ever wanted outside Railway.
+      - uses: docker/build-push-action@v6
+        with:
+          context: ./opencode
+          platforms: linux/amd64
+          push: true
+          provenance: false
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/opencode-railway:${{ steps.meta.outputs.version }}
+            ghcr.io/${{ github.repository_owner }}/opencode-railway:${{ steps.meta.outputs.minor }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.version=${{ steps.meta.outputs.version }}
+            org.opencontainers.image.description=OpenCode CLI + web UI on Railway (OpenCode ${{ steps.meta.outputs.opencode }})
+            ai.opencode.version=${{ steps.meta.outputs.opencode }}
+
+      - name: Summary
+        run: |
+          {
+            echo "### Published"
+            echo ""
+            echo '```'
+            echo "ghcr.io/${{ github.repository_owner }}/opencode-railway:${{ steps.meta.outputs.version }}"
+            echo "ghcr.io/${{ github.repository_owner }}/opencode-railway:${{ steps.meta.outputs.minor }}"
+            echo '```'
+            echo ""
+            echo "OpenCode: **${{ steps.meta.outputs.opencode }}**"
+            echo ""
+            echo "> First publish only: set the GHCR package to **public**"
+            echo "> (Packages -> opencode-railway -> Package settings -> Change visibility)."
+            echo "> Deployers cannot pull a private image and every deploy will fail."
+          } >> "$GITHUB_STEP_SUMMARY"
