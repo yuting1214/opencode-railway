@@ -1,7 +1,11 @@
 # Secrets — never commit real keys
 .env
-opencode-devbox/.env
+opencode/.env
 *.local
+
+# Personal/local reference — never commit
+docs/COMPETITIVE-ANALYSIS.md
+docs/HEALTH-PLAN.md
 
 # Logs / OS cruft
 *.log
