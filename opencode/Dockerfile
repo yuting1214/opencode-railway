@@ -17,8 +17,20 @@ RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
     && rm -rf /var/lib/apt/lists/*
 
 # OpenCode — the open-source AI coding agent (https://opencode.ai).
-# Pinned to @latest at build time; `opencode upgrade` works at runtime too.
-RUN npm install -g opencode-ai@latest
+#
+# PINNED ON PURPOSE. This is a GitHub-sourced template, so every deploy rebuilds
+# this image from scratch — `opencode-ai@latest` meant each deployer got whatever
+# npm published that hour (~300 publishes/30 days, ~20 stable releases/month).
+# One bad upstream release then crash-loops `opencode web` for everyone who
+# deploys that day, and the template's deploy-success score takes the hit for a
+# bug we didn't write.
+#
+# Bump this deliberately: change the ARG, redeploy, verify the web UI and TUI,
+# then commit. `opencode upgrade` still works at runtime for anyone who wants
+# newer inside their own box.
+ARG OPENCODE_VERSION=1.18.29
+RUN npm install -g "opencode-ai@${OPENCODE_VERSION}" \
+    && opencode --version
 
 WORKDIR /workspace
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
