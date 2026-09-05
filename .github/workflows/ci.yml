@@ -1,0 +1,77 @@
+name: ci
+
+# Guards the two things that historically broke deploys:
+#   1. the pinned OpenCode version not being what the image actually runs
+#   2. /site.webmanifest — the Railway healthcheck path — not returning 200
+#      WITHOUT auth. If an upstream release ever protects it, every deploy fails.
+on:
+  push:
+    branches: [main]
+    paths: ['opencode/**', '.github/workflows/ci.yml']
+  pull_request:
+    paths: ['opencode/**', '.github/workflows/ci.yml']
+  workflow_dispatch:
+
+jobs:
+  build-and-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build image
+        run: docker build -t opencode-ci ./opencode
+
+      - name: Image must run exactly the pinned version
+        run: |
+          pin=$(grep -oP '^ARG OPENCODE_VERSION=\K.*' opencode/Dockerfile)
+          got=$(docker run --rm --entrypoint opencode opencode-ci --version | tr -d '\r\n')
+          echo "pinned=$pin  running=$got"
+          if [ "$pin" != "$got" ]; then
+            echo "::error::Dockerfile pins $pin but the image runs $got"
+            exit 1
+          fi
+
+      - name: Start container
+        run: |
+          mkdir -p /tmp/ws
+          docker run -d --name oc \
+            -v /tmp/ws:/workspace \
+            -e OPENCODE_SERVER_USERNAME=opencode \
+            -e OPENCODE_SERVER_PASSWORD=ci-test-password \
+            -p 8080:8080 opencode-ci
+          # opencode web needs a moment; poll rather than sleep a fixed amount.
+          for i in $(seq 1 60); do
+            if [ "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/site.webmanifest)" = "200" ]; then
+              echo "up after ${i} tries"; exit 0
+            fi
+            sleep 2
+          done
+          echo "::error::service never became reachable"
+          exit 1
+
+      - name: Healthcheck path must be 200 WITHOUT credentials
+        run: |
+          code=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/site.webmanifest)
+          echo "/site.webmanifest -> $code"
+          if [ "$code" != "200" ]; then
+            echo "::error::healthcheckPath in railway.json would fail every deploy"
+            exit 1
+          fi
+
+      - name: Everything else must stay behind basic auth
+        run: |
+          anon=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/)
+          auth=$(curl -s -o /dev/null -w '%{http_code}' -u opencode:ci-test-password http://localhost:8080/)
+          echo "/ anon=$anon auth=$auth"
+          [ "$anon" = "401" ] || { echo "::error::public URL is not password protected"; exit 1; }
+          [ "$auth" = "200" ] || { echo "::error::correct credentials rejected"; exit 1; }
+
+      - name: Volume state was created on first boot
+        run: |
+          docker exec oc test -f /workspace/.ssh/id_ed25519
+          docker exec oc test -L /root/.local/share/opencode
+          docker exec oc test -L /root/.config/opencode
+
+      - name: Container logs
+        if: always()
+        run: docker logs oc || true
