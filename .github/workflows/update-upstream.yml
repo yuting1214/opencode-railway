@@ -1,0 +1,87 @@
+name: update-upstream
+
+# Closes the loop on the version pin.
+#
+# Pinning OpenCode stopped the "whatever npm published this hour" roulette that
+# cost deploy-success — but an unattended pin just goes stale instead. This
+# checks weekly and opens a PR when upstream moves. The PR runs ci.yml, which
+# builds the image, asserts it runs the new version, and proves the web surface
+# and healthcheck path still behave. So a bump is only mergeable if it boots.
+on:
+  schedule:
+    - cron: '0 6 * * 1'   # Mondays 06:00 UTC
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Compare pin against npm
+        id: check
+        run: |
+          current=$(grep -oP '^ARG OPENCODE_VERSION=\K.*' opencode/Dockerfile)
+          latest=$(npm view opencode-ai version)
+          echo "current=$current" >> "$GITHUB_OUTPUT"
+          echo "latest=$latest"   >> "$GITHUB_OUTPUT"
+          if [ "$current" = "$latest" ]; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "Already on $current."
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            echo "$current -> $latest"
+          fi
+
+      - name: Bump the pin
+        if: steps.check.outputs.changed == 'true'
+        run: |
+          sed -i "s/^ARG OPENCODE_VERSION=.*/ARG OPENCODE_VERSION=${{ steps.check.outputs.latest }}/" opencode/Dockerfile
+          grep -n '^ARG OPENCODE_VERSION=' opencode/Dockerfile
+
+      - name: Open PR
+        if: steps.check.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: chore/bump-opencode
+          delete-branch: true
+          title: "chore(deps): bump OpenCode to ${{ steps.check.outputs.latest }}"
+          commit-message: |
+            chore(deps): bump OpenCode to ${{ steps.check.outputs.latest }}
+
+            Why:
+            Automated weekly upstream check. Keeps the pin current so it does not
+            go stale, without returning to unpinned @latest.
+
+            What:
+            - ARG OPENCODE_VERSION ${{ steps.check.outputs.current }} -> ${{ steps.check.outputs.latest }}
+          body: |
+            Automated upstream check.
+
+            | | |
+            |---|---|
+            | Current pin | `${{ steps.check.outputs.current }}` |
+            | Latest on npm | `${{ steps.check.outputs.latest }}` |
+
+            CI on this PR builds the image, asserts it runs the new version, and
+            checks the web surface. **Do not merge on a red CI run** — a failure
+            here is exactly the upstream regression the pin exists to absorb.
+
+            Before merging, confirm:
+
+            - [ ] CI green (build, version assert, healthcheck, basic auth)
+            - [ ] `/site.webmanifest` still returns **200 without credentials** —
+                  it is the Railway `healthcheckPath`; if upstream ever protects
+                  it, every deploy fails
+            - [ ] `opencode web --hostname/--port` flags unchanged
+            - [ ] Deployed to a scratch project and the TUI still opens over SSH
+
+            Releasing the image afterwards: tag `v<template-version>` to trigger
+            `release.yml` (see `docs/PUBLISH.md`).
