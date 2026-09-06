@@ -71,4 +71,4 @@ access token into a form.
 
 One click gives you OpenCode with two front doors — a browser web UI and an SSH terminal — over a
 single service, with credentials and repos that outlive every redeploy. Source and docs:
-<https://github.com/yuting1214/opencode-railway>.
+[github.com/yuting1214/opencode-railway](https://github.com/yuting1214/opencode-railway).
