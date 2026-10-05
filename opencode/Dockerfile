@@ -28,7 +28,7 @@ RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
 # Bump this deliberately: change the ARG, redeploy, verify the web UI and TUI,
 # then commit. `opencode upgrade` still works at runtime for anyone who wants
 # newer inside their own box.
-ARG OPENCODE_VERSION=1.18.29
+ARG OPENCODE_VERSION=1.18.34
 RUN npm install -g "opencode-ai@${OPENCODE_VERSION}" \
     && opencode --version
 
