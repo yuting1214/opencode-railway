@@ -1,7 +1,7 @@
 # Deploy and Host OpenCode 2 on Railway
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/yuting1214/opencode-railway/f96aaa0af904d4c13a8207598bd4c82420640984/assets/hero.png" alt="OpenCode — open-source AI coding agent" width="720">
+  <img src="https://raw.githubusercontent.com/yuting1214/opencode-railway/9b40bca88893860ffd45f7426177942068734d21/assets/v2-session.png" alt="The OpenCode 2 web app on this template: an agent touring a repo on the free DeepSeek model" width="860">
 </p>
 
 [OpenCode](https://opencode.ai) is **the open-source AI coding agent** — it reads your repo, writes
@@ -27,6 +27,13 @@ To sign in, open the public URL, choose **Use password**, and paste the password
 logs (`[boot] opencode web auth → …`) or the `OPENCODE_PASSWORD` variable — it is generated for your
 deploy.
 
+<p align="center">
+  <img src="https://raw.githubusercontent.com/yuting1214/opencode-railway/9b40bca88893860ffd45f7426177942068734d21/assets/v2-review.png" alt="OpenCode 2 Review panel: side-by-side diff of an edit the agent made" width="860">
+</p>
+
+Every edit the agent makes shows up in the web app's **Review** panel as a side-by-side diff, next
+to the conversation that produced it, alongside a file browser for the repo.
+
 ## Why Deploy OpenCode 2 on Railway?
 
 - **OpenCode 2 from day one** — the new shared-server architecture and redesigned web app, pinned to
@@ -35,6 +42,8 @@ deploy.
   free lineup is set by OpenCode and changes over time.
 - **One workspace, browser and terminal** — the web app and the real `opencode` TUI over SSH share
   one server: same sessions, same history, same repos.
+- **Review every change in the browser** — the Review panel shows each file the agent touched as a
+  side-by-side diff, so you can check its work from any device.
 - **A real terminal, not just a web console** — `railway ssh` gives you the actual TUI with a shell,
   `git`, and `gh` beside it.
 - **Your laptop can sleep** — the agent lives in the cloud; reopen the link or SSH back in and pick
