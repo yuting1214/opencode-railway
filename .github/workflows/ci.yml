@@ -136,6 +136,19 @@ jobs:
           echo "service status: $status"
           [ "$status" = "http://0.0.0.0:8080" ] || { echo "::error::TUI would start a separate server"; exit 1; }
 
+      - name: First boot seeds the "Start here" session in /workspace/repos
+        run: |
+          # Without it, a fresh browser has no project and New session does nothing.
+          for i in $(seq 1 30); do
+            dir=$(curl -s -u opencode:ci-test-password 'http://localhost:8080/api/session?limit=50' \
+              | jq -r '.data[] | select(.title | startswith("Start here")) | .location.directory')
+            [ -n "$dir" ] && break
+            sleep 2
+          done
+          echo "Start here session directory: ${dir:-<none>}"
+          [ "$dir" = "/workspace/repos" ] || { echo "::error::Start here session missing or not in /workspace/repos"; exit 1; }
+          docker exec oc2 test -f /workspace/.opencode-start-session
+
       - name: Volume state was created on first boot
         run: |
           docker exec oc2 test -f /workspace/.ssh/id_ed25519
