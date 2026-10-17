@@ -15,6 +15,7 @@ on:
 jobs:
   build-and-smoke:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
 
@@ -41,7 +42,7 @@ jobs:
             -p 8080:8080 opencode-ci
           # opencode web needs a moment; poll rather than sleep a fixed amount.
           for i in $(seq 1 60); do
-            if [ "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/site.webmanifest)" = "200" ]; then
+            if [ "$(curl -s --max-time 10 -o /dev/null -w '%{http_code}' http://localhost:8080/site.webmanifest)" = "200" ]; then
               echo "up after ${i} tries"; exit 0
             fi
             sleep 2
@@ -51,7 +52,7 @@ jobs:
 
       - name: Healthcheck path must be 200 WITHOUT credentials
         run: |
-          code=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/site.webmanifest)
+          code=$(curl -s --max-time 10 -o /dev/null -w '%{http_code}' http://localhost:8080/site.webmanifest)
           echo "/site.webmanifest -> $code"
           if [ "$code" != "200" ]; then
             echo "::error::healthcheckPath in railway.json would fail every deploy"
@@ -60,8 +61,8 @@ jobs:
 
       - name: Everything else must stay behind basic auth
         run: |
-          anon=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/)
-          auth=$(curl -s -o /dev/null -w '%{http_code}' -u opencode:ci-test-password http://localhost:8080/)
+          anon=$(curl -s --max-time 10 -o /dev/null -w '%{http_code}' http://localhost:8080/)
+          auth=$(curl -s --max-time 10 -o /dev/null -w '%{http_code}' -u opencode:ci-test-password http://localhost:8080/)
           echo "/ anon=$anon auth=$auth"
           [ "$anon" = "401" ] || { echo "::error::public URL is not password protected"; exit 1; }
           [ "$auth" = "200" ] || { echo "::error::correct credentials rejected"; exit 1; }
@@ -81,6 +82,7 @@ jobs:
   # API must refuse anonymous callers.
   v2-build-and-smoke:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
 
@@ -106,7 +108,7 @@ jobs:
             -p 8080:8080 opencode-v2-ci
           # The server answers `/` before the API is ready; wait for the API.
           for i in $(seq 1 60); do
-            if [ "$(curl -s -o /dev/null -w '%{http_code}' -u opencode:ci-test-password http://localhost:8080/api/session)" = "200" ]; then
+            if [ "$(curl -s --max-time 10 -o /dev/null -w '%{http_code}' -u opencode:ci-test-password http://localhost:8080/api/session)" = "200" ]; then
               echo "up after ${i} tries"; exit 0
             fi
             sleep 2
@@ -116,15 +118,15 @@ jobs:
 
       - name: Healthcheck path must be 200 WITHOUT credentials
         run: |
-          code=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/)
+          code=$(curl -s --max-time 10 -o /dev/null -w '%{http_code}' http://localhost:8080/)
           echo "/ -> $code"
           [ "$code" = "200" ] || { echo "::error::healthcheckPath in railway.json would fail every deploy"; exit 1; }
 
       - name: API must refuse anonymous and wrong-password callers
         run: |
-          anon=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/api/session)
-          bad=$(curl -s -o /dev/null -w '%{http_code}' -u opencode:wrong http://localhost:8080/api/session)
-          good=$(curl -s -o /dev/null -w '%{http_code}' -u opencode:ci-test-password http://localhost:8080/api/session)
+          anon=$(curl -s --max-time 10 -o /dev/null -w '%{http_code}' http://localhost:8080/api/session)
+          bad=$(curl -s --max-time 10 -o /dev/null -w '%{http_code}' -u opencode:wrong http://localhost:8080/api/session)
+          good=$(curl -s --max-time 10 -o /dev/null -w '%{http_code}' -u opencode:ci-test-password http://localhost:8080/api/session)
           echo "/api/session anon=$anon wrong=$bad right=$good"
           [ "$anon" = "401" ] || { echo "::error::API is not password protected"; exit 1; }
           [ "$bad" = "401" ]  || { echo "::error::wrong password accepted"; exit 1; }
@@ -140,7 +142,7 @@ jobs:
         run: |
           # Without it, a fresh browser has no project and New session does nothing.
           for i in $(seq 1 30); do
-            dir=$(curl -s -u opencode:ci-test-password 'http://localhost:8080/api/session?limit=50' \
+            dir=$(curl -s --max-time 10 -u opencode:ci-test-password 'http://localhost:8080/api/session?limit=50' \
               | jq -r '.data[] | select(.title | startswith("Start here")) | .location.directory')
             [ -n "$dir" ] && break
             sleep 2
