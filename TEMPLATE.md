@@ -22,10 +22,15 @@ Deploys come from a **prebuilt, version-pinned image**, so there is no build to 
 every deploy runs the exact OpenCode build that was tested — new deploys pick up the latest patched
 image automatically, while a box you already have keeps running undisturbed until you redeploy it.
 The web UI password is **generated for your deploy**; you never invent one or inherit a shared
-default. Add a provider key on the deploy form, or run `opencode auth login` after connecting.
+default. You can **start coding free with no API key**: OpenCode's free models (such as DeepSeek)
+work as soon as the box boots. Add a provider key on the deploy form, or run `opencode auth login`
+after connecting, when you want Claude, GPT or your own account.
 
 ## Why Deploy OpenCode on Railway?
 
+- **Start free, no API key** — OpenCode's free models (such as DeepSeek) work out of the box, so
+  you can try a cloud coding agent before paying any provider. The free lineup is set by OpenCode
+  and changes over time.
 - **A real terminal, not just a web console** — `railway ssh` gives you the actual `opencode` TUI
   with a shell, `git`, and `gh` beside it. Most hosted OpenCode setups stop at the browser.
 - **Two front doors, one service** — a shareable browser **web UI** *and* that terminal, both
@@ -50,9 +55,9 @@ default. Add a provider key on the deploy form, or run `opencode auth login` aft
 
 ## Dependencies for OpenCode Hosting
 
-- A provider **API key** for at least one model backend — `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`,
-  or `OPENROUTER_API_KEY`, all three offered on the deploy form so the box is usable the moment it
-  boots. Leave them blank and run `opencode auth login` after connecting instead.
+- **No API key required to start** — OpenCode's free models work out of the box. For premium
+  models, add `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, or `OPENROUTER_API_KEY` (all three are on
+  the deploy form), or leave them blank and run `opencode auth login` after connecting.
 - The **Railway CLI** for terminal/TUI access (`railway ssh`); the web UI needs only a browser.
 
 The box also honours **`GITHUB_TOKEN`**, **`GIT_USER_NAME`** and **`GIT_USER_EMAIL`** if you add

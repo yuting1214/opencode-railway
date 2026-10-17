@@ -16,8 +16,9 @@ Both share the same `/workspace`, auth, and repos, which live on a Railway volum
 
 1. **Deploy** this template (button above). It provisions the service, a **Volume** at `/workspace`,
    and a **public domain**.
-2. *(Optional)* set a provider key in **Variables** (`ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, or
-   `OPENROUTER_API_KEY`) — or just `opencode auth login` later. Optional: `GITHUB_TOKEN`,
+2. *(Optional)* nothing to set to start: OpenCode's free models (such as DeepSeek) work with **no
+   API key**. For premium models, set a provider key in **Variables** (`ANTHROPIC_API_KEY`,
+   `OPENAI_API_KEY`, or `OPENROUTER_API_KEY`) — or just `opencode auth login` later. Optional: `GITHUB_TOKEN`,
    `GIT_USER_NAME`, `GIT_USER_EMAIL`, `OPENCODE_SERVER_PASSWORD`.
 3. **Web UI:** open the service's public URL. Log in with user `opencode` and the password printed
    in the **deploy logs** (`[boot] opencode web auth → ...`), or whatever you set in

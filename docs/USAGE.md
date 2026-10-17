@@ -9,7 +9,9 @@ work, disconnect. Nothing about your session is lost when you leave — it all l
 After deploying the template:
 
 1. **Attach a volume** at mount path `/workspace` (the template includes it; confirm it's present).
-2. **Set provider key(s)** in the service **Variables** tab — at least one of:
+2. *(Optional)* **Set provider key(s)** in the service **Variables** tab. Not needed to start:
+   OpenCode's free models (such as DeepSeek) work with no key — list them with
+   `opencode models opencode`. For premium models, set one of:
    - `ANTHROPIC_API_KEY`
    - `OPENAI_API_KEY`
    - `OPENROUTER_API_KEY`
@@ -57,7 +59,10 @@ cat ~/.ssh/id_ed25519.pub      # copy this into GitHub → Settings → SSH keys
 
 ## 4. Authentication options
 
-You have two equivalent ways to give OpenCode a model:
+Out of the box, OpenCode's free models need no credentials, e.g.
+`opencode run -m opencode/deepseek-v4.1-flash-free "…"` (the free lineup changes over time —
+`opencode models opencode` shows the current one). For other providers, you have two equivalent
+ways to give OpenCode a model:
 
 - **Railway variables** (set in step 1) — mirrored into the SSH shell automatically.
 - **`opencode auth login`** — run it once inside the box; credentials are written to
