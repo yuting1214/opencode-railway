@@ -75,5 +75,7 @@ access token into a form.
 ### Why This Template?
 
 One click gives you OpenCode with two front doors — a browser web UI and an SSH terminal — over a
-single service, with credentials and repos that outlive every redeploy. Source and docs:
+single service, with credentials and repos that outlive every redeploy. Want the new release?
+[OpenCode 2 CLI + Web App](https://railway.com/deploy/opencode-2-cli-web-app?referralCode=jk_FgY&utm_medium=integration&utm_source=template&utm_campaign=generic) runs
+OpenCode 2 with browser and terminal sharing one set of sessions. Source and docs:
 [github.com/yuting1214/opencode-railway](https://github.com/yuting1214/opencode-railway).

@@ -1,6 +1,16 @@
 # OpenCode on Railway
 
-[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/opencode-cli-web-app?referralCode=jk_FgY&utm_medium=integration&utm_source=template&utm_campaign=generic)
+Two one-click templates from this repo — pick your OpenCode:
+
+| | Template | Deploy |
+|---|---|---|
+| **OpenCode 2** | New shared-server architecture: the web app and the SSH TUI share one set of sessions. | [![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/opencode-2-cli-web-app?referralCode=jk_FgY&utm_medium=integration&utm_source=template&utm_campaign=generic) |
+| **OpenCode 1.x** | The stable line: web UI + SSH TUI in one box. | [![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/opencode-cli-web-app?referralCode=jk_FgY&utm_medium=integration&utm_source=template&utm_campaign=generic) |
+
+Both start free — OpenCode's free models (such as DeepSeek) work with **no API key** — and both
+deploy from a prebuilt, version-pinned image. The rest of this README describes the 1.x template
+(`opencode/`); the OpenCode 2 one lives in [`opencode-v2/`](opencode-v2/) and is described in
+[`opencode-v2/TEMPLATE.md`](opencode-v2/TEMPLATE.md).
 
 A one-click, self-hosted home for **[OpenCode](https://opencode.ai)** — the open-source AI coding
 agent — with **two ways in from one service**:
@@ -60,11 +70,12 @@ See [`docs/USAGE.md`](docs/USAGE.md) for the full walkthrough,
 
 ```
 opencode-railway/
-├── opencode/               ← the deployable (Railway root directory)
+├── opencode/               ← the 1.x deployable (image :1.x, tags v1.*)
 │   ├── Dockerfile
 │   ├── entrypoint.sh
 │   ├── railway.json
 │   └── .env.example
+├── opencode-v2/            ← the OpenCode 2 deployable (image :2.x, tags v2.*)
 ├── docs/
 └── assets/
 ```
