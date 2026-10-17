@@ -74,8 +74,14 @@ opencode-railway/
 │   ├── Dockerfile
 │   ├── entrypoint.sh
 │   ├── railway.json
-│   └── .env.example
+│   ├── .env.example
+│   └── .railwayignore
 ├── opencode-v2/            ← the OpenCode 2 deployable (image :2.x, tags v2.*)
+│   ├── Dockerfile
+│   ├── entrypoint.sh
+│   ├── railway.json
+│   ├── TEMPLATE.md         ← its marketplace readme
+│   └── .railwayignore
 ├── docs/
 └── assets/
 ```
