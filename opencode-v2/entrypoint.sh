@@ -100,5 +100,33 @@ echo "[boot] writing /etc/profile.d/00-opencode-env.sh for SSH shells..."
 } > /etc/profile.d/00-opencode-env.sh
 chmod 644 /etc/profile.d/00-opencode-env.sh
 
-echo "[boot] web UI → public Railway domain.  TUI → railway ssh then 'opencode' (same sessions)."
+# ── First-run "Start here" session ──────────────────────────
+# The web app's New session needs a project, and a browser's project list starts
+# empty — so on a fresh deploy New session silently does nothing, and Add project
+# opens at the server's home (/root), which is NOT on the volume. Opening any
+# session adds its folder as a project, so seed one in /workspace/repos once the
+# server is up: a first-time visitor clicks it and lands in the persistent
+# folder, and New session works from then on. Seeded once per volume (marker
+# file), so a session the user deletes is never recreated.
+SEED_MARKER=/workspace/.opencode-start-session
+if [ ! -f "$SEED_MARKER" ]; then
+    (
+        api="http://127.0.0.1:${PORT:-8080}/api/session"
+        pw="$(grep -o '"password": *"[^"]*"' /root/.config/opencode/service.json | cut -d'"' -f4)"
+        for _ in $(seq 1 120); do
+            [ "$(curl -s -o /dev/null -w '%{http_code}' -u "opencode:$pw" "$api")" = 200 ] && break
+            sleep 1
+        done
+        if curl -sf -u "opencode:$pw" -X POST -H 'Content-Type: application/json' \
+                "$api" \
+                -d '{"title":"Start here — work in /workspace/repos (kept across redeploys)","location":{"directory":"/workspace/repos"}}' >/dev/null; then
+            touch "$SEED_MARKER"
+            echo "[boot] created the 'Start here' session in /workspace/repos"
+        else
+            echo "[boot] could not create the 'Start here' session (use Add project → /workspace/repos)"
+        fi
+    ) &
+fi
+
+echo "[boot] web UI → public Railway domain (open 'Start here').  TUI → your own OpenCode 2 with --server, or railway ssh then 'opencode' (same sessions)."
 exec "$@"
