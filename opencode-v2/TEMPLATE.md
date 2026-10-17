@@ -1,7 +1,7 @@
 # Deploy and Host OpenCode 2 on Railway
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/yuting1214/opencode-railway/9b40bca88893860ffd45f7426177942068734d21/assets/v2-session.png" alt="The OpenCode 2 web app on this template: an agent touring a repo on the free DeepSeek model" width="860">
+  <img src="https://raw.githubusercontent.com/yuting1214/opencode-railway/147398795a20abc1d5ccf4669aa94594d0593f2b/assets/v2-session.png" alt="The OpenCode 2 web app on this template: an agent touring a repo on the free DeepSeek model" width="860">
 </p>
 
 [OpenCode](https://opencode.ai) is **the open-source AI coding agent** — it reads your repo, writes
@@ -28,7 +28,7 @@ logs (`[boot] opencode web auth → …`) or the `OPENCODE_PASSWORD` variable �
 deploy.
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/yuting1214/opencode-railway/9b40bca88893860ffd45f7426177942068734d21/assets/v2-review.png" alt="OpenCode 2 Review panel: side-by-side diff of an edit the agent made" width="860">
+  <img src="https://raw.githubusercontent.com/yuting1214/opencode-railway/147398795a20abc1d5ccf4669aa94594d0593f2b/assets/v2-review.png" alt="OpenCode 2 Review panel: side-by-side diff of an edit the agent made" width="860">
 </p>
 
 Every edit the agent makes shows up in the web app's **Review** panel as a side-by-side diff, next
