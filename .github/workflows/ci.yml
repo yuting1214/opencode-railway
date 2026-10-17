@@ -7,9 +7,9 @@ name: ci
 on:
   push:
     branches: [main]
-    paths: ['opencode/**', '.github/workflows/ci.yml']
+    paths: ['opencode/**', 'opencode-v2/**', '.github/workflows/ci.yml']
   pull_request:
-    paths: ['opencode/**', '.github/workflows/ci.yml']
+    paths: ['opencode/**', 'opencode-v2/**', '.github/workflows/ci.yml']
   workflow_dispatch:
 
 jobs:
@@ -75,3 +75,74 @@ jobs:
       - name: Container logs
         if: always()
         run: docker logs oc || true
+
+  # OpenCode 2 template (opencode-v2/). Different server, different guards:
+  # the web UI shell is public by design and `/` is the healthcheck, while the
+  # API must refuse anonymous callers.
+  v2-build-and-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build image
+        run: docker build -t opencode-v2-ci ./opencode-v2
+
+      - name: Image must run exactly the pinned version
+        run: |
+          pin=$(grep -oP '^ARG OPENCODE_VERSION=\K.*' opencode-v2/Dockerfile)
+          got=$(docker run --rm --entrypoint opencode opencode-v2-ci --version | tr -d '\r\n')
+          echo "pinned=$pin  running=$got"
+          if [ "$got" != "opencode v$pin" ]; then
+            echo "::error::Dockerfile pins $pin but the image runs $got"
+            exit 1
+          fi
+
+      - name: Start container
+        run: |
+          mkdir -p /tmp/ws2
+          docker run -d --name oc2 \
+            -v /tmp/ws2:/workspace \
+            -e OPENCODE_PASSWORD=ci-test-password \
+            -p 8080:8080 opencode-v2-ci
+          # The server answers `/` before the API is ready; wait for the API.
+          for i in $(seq 1 60); do
+            if [ "$(curl -s -o /dev/null -w '%{http_code}' -u opencode:ci-test-password http://localhost:8080/api/session)" = "200" ]; then
+              echo "up after ${i} tries"; exit 0
+            fi
+            sleep 2
+          done
+          echo "::error::service never became reachable"
+          exit 1
+
+      - name: Healthcheck path must be 200 WITHOUT credentials
+        run: |
+          code=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/)
+          echo "/ -> $code"
+          [ "$code" = "200" ] || { echo "::error::healthcheckPath in railway.json would fail every deploy"; exit 1; }
+
+      - name: API must refuse anonymous and wrong-password callers
+        run: |
+          anon=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/api/session)
+          bad=$(curl -s -o /dev/null -w '%{http_code}' -u opencode:wrong http://localhost:8080/api/session)
+          good=$(curl -s -o /dev/null -w '%{http_code}' -u opencode:ci-test-password http://localhost:8080/api/session)
+          echo "/api/session anon=$anon wrong=$bad right=$good"
+          [ "$anon" = "401" ] || { echo "::error::API is not password protected"; exit 1; }
+          [ "$bad" = "401" ]  || { echo "::error::wrong password accepted"; exit 1; }
+          [ "$good" = "200" ] || { echo "::error::correct credentials rejected"; exit 1; }
+
+      - name: The CLI attaches to the same server (shared sessions)
+        run: |
+          status=$(docker exec oc2 bash -lc 'opencode service status' | tr -d '\r')
+          echo "service status: $status"
+          [ "$status" = "http://0.0.0.0:8080" ] || { echo "::error::TUI would start a separate server"; exit 1; }
+
+      - name: Volume state was created on first boot
+        run: |
+          docker exec oc2 test -f /workspace/.ssh/id_ed25519
+          docker exec oc2 test -L /root/.local/share/opencode
+          docker exec oc2 test -L /root/.config/opencode
+          docker exec oc2 test -f /workspace/opencode/config/service.json
+
+      - name: Container logs
+        if: always()
+        run: docker logs oc2 || true

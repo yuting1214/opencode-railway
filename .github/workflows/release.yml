@@ -11,6 +11,11 @@ name: release
 # breaking change (1.1.x) never lands on anyone unannounced. This mirrors what
 # the two highest-health competitors do — neither ships a frozen image.
 #
+# Two templates, one image repo — the tag's MAJOR picks the template:
+#   v1.x.y  ->  ./opencode     (OpenCode 1.x)  ->  :1.x.y, :1.x
+#   v2.x.y  ->  ./opencode-v2  (OpenCode 2)    ->  :2.x.y, :2.x
+# so the image tag a template points at also says which OpenCode it runs.
+#
 # The OpenCode version that went into the image is recorded as a label so any
 # published image can be traced back to the agent it runs.
 on:
@@ -40,9 +45,15 @@ jobs:
             [0-9]*.[0-9]*.[0-9]*) ;;
             *) echo "::error::version must be MAJOR.MINOR.PATCH, got '$raw'"; exit 1 ;;
           esac
+          case "${raw%%.*}" in
+            1) context=./opencode ;;
+            2) context=./opencode-v2 ;;
+            *) echo "::error::no template for major version ${raw%%.*}"; exit 1 ;;
+          esac
           echo "version=$raw"            >> "$GITHUB_OUTPUT"
           echo "minor=${raw%.*}"         >> "$GITHUB_OUTPUT"
-          echo "opencode=$(grep -oP '^ARG OPENCODE_VERSION=\K.*' opencode/Dockerfile)" >> "$GITHUB_OUTPUT"
+          echo "context=$context"        >> "$GITHUB_OUTPUT"
+          echo "opencode=$(grep -oP '^ARG OPENCODE_VERSION=\K.*' "$context/Dockerfile")" >> "$GITHUB_OUTPUT"
 
       - uses: docker/setup-buildx-action@v3
 
@@ -56,7 +67,7 @@ jobs:
       # add linux/arm64 here if the image is ever wanted outside Railway.
       - uses: docker/build-push-action@v6
         with:
-          context: ./opencode
+          context: ${{ steps.meta.outputs.context }}
           platforms: linux/amd64
           push: true
           provenance: false
@@ -66,7 +77,7 @@ jobs:
           labels: |
             org.opencontainers.image.source=https://github.com/${{ github.repository }}
             org.opencontainers.image.version=${{ steps.meta.outputs.version }}
-            org.opencontainers.image.description=OpenCode CLI + web UI on Railway (OpenCode ${{ steps.meta.outputs.opencode }})
+            org.opencontainers.image.description=OpenCode CLI + web UI on Railway (OpenCode ${{ steps.meta.outputs.opencode }}, ${{ steps.meta.outputs.context }})
             ai.opencode.version=${{ steps.meta.outputs.opencode }}
 
       - name: Summary
