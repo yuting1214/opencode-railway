@@ -22,7 +22,7 @@ RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
 # PINNED ON PURPOSE, same as the 1.x template: 2.0 shipped ~30 releases in its
 # first five weeks, and a floating version hands every bad one straight to
 # whoever deploys that day. Bump deliberately; CI asserts the image runs it.
-ARG OPENCODE_VERSION=2.0.32
+ARG OPENCODE_VERSION=2.1.4
 RUN npm install -g "@opencode/cli@${OPENCODE_VERSION}" \
     && opencode --version
 
